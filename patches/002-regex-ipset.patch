@@ -1,8 +1,8 @@
 diff --git a/src/config.h b/src/config.h
-index 82024df..a606732 100644
+index 38aaa0b..b6323dc 100644
 --- a/src/config.h
 +++ b/src/config.h
-@@ -200,6 +200,7 @@ RESOLVFILE
+@@ -204,6 +204,7 @@ RESOLVFILE
  /* #define HAVE_DNSSEC */
  /* #define HAVE_NFTSET */
  /* #define HAVE_REGEX */
@@ -10,7 +10,7 @@ index 82024df..a606732 100644
  
  /* Default locations for important system files. */
  
-@@ -397,7 +398,12 @@ static char *compile_opts =
+@@ -414,7 +415,12 @@ static char *compile_opts =
  #ifndef HAVE_REGEX
  "no-"
  #endif
@@ -25,10 +25,10 @@ index 82024df..a606732 100644
  "IDN2 "
  #else
 diff --git a/src/dnsmasq.h b/src/dnsmasq.h
-index 3c7d0ee..49623e2 100644
+index f3825f7..5ec62e1 100644
 --- a/src/dnsmasq.h
 +++ b/src/dnsmasq.h
-@@ -661,6 +661,10 @@ struct ipsets {
+@@ -674,6 +674,10 @@ struct ipsets {
    char **sets;
    char *domain;
    struct ipsets *next;
@@ -40,10 +40,10 @@ index 3c7d0ee..49623e2 100644
  
  struct allowlist {
 diff --git a/src/forward.c b/src/forward.c
-index e8a57f4..d452ee8 100644
+index be969e3..8081194 100644
 --- a/src/forward.c
 +++ b/src/forward.c
-@@ -700,6 +700,12 @@ static struct ipsets *domain_find_sets(struct ipsets *setlist, const char *domai
+@@ -698,6 +698,12 @@ static struct ipsets *domain_find_sets(struct ipsets *setlist, const char *domai
    unsigned int matchlen = 0;
    for (ipset_pos = setlist; ipset_pos; ipset_pos = ipset_pos->next) 
      {
@@ -56,7 +56,7 @@ index e8a57f4..d452ee8 100644
        unsigned int domainlen = strlen(ipset_pos->domain);
        const char *matchstart = domain + namelen - domainlen;
        if (namelen >= domainlen && hostname_isequal(matchstart, ipset_pos->domain) &&
-@@ -709,6 +715,9 @@ static struct ipsets *domain_find_sets(struct ipsets *setlist, const char *domai
+@@ -707,6 +713,9 @@ static struct ipsets *domain_find_sets(struct ipsets *setlist, const char *domai
            matchlen = domainlen;
            ret = ipset_pos;
          }
@@ -67,10 +67,10 @@ index e8a57f4..d452ee8 100644
  
    return ret;
 diff --git a/src/option.c b/src/option.c
-index 07d66ae..924b2e5 100644
+index a13f1fa..776d320 100644
 --- a/src/option.c
 +++ b/src/option.c
-@@ -3197,6 +3197,18 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
+@@ -3223,6 +3223,18 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
  	     while ((end = split_chr(arg, '/'))) 
  	       {
  		 char *domain = NULL;
@@ -89,7 +89,7 @@ index 07d66ae..924b2e5 100644
  		 /* elide leading dots - they are implied in the search algorithm */
  		 while (*arg == '.')
  		   arg++;
-@@ -3209,6 +3221,9 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
+@@ -3235,6 +3247,9 @@ static int one_opt(int option, char *arg, char *errstr, char *gen_err, int comma
  		 ipsets = ipsets->next;
  		 memset(ipsets, 0, sizeof(struct ipsets));
  		 ipsets->domain = domain;
