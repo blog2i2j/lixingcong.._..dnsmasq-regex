@@ -1,6 +1,10 @@
 ## Dnsmasq with regex support
 
-Lastest version: v2.91
+Lastest version: v2.92rc3
+
+The regex lib will be upgraded to libpcre2.
+
+> PCRE2 was first released in 2015 to replace the API in the original PCRE library, which is now obsolete and no longer maintained.
 
 patches:
 - [001-regex-server.patch](/patches/001-regex-server.patch)
