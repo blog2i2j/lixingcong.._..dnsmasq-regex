@@ -21,9 +21,15 @@ Offical dnsmasq:
 
 For Debian/Ubuntu:
 
-```
+```bash
 # Install the dependencies
-sudo apt install -y libpcre3-dev libnftables-dev pkg-config
+sudo apt install -y libnftables-dev pkg-config
+
+# The old PCRE(v8.45) is confusingly called libpcre3-dev in Debian and Ubuntu
+sudo apt install -y libpcre3-dev
+
+# You could link to the new PCRE(v10+), and change compile options(see below)
+sudo apt install -y libpcre2-dev
 
 # Clone the repo
 git clone https://github.com/lixingcong/dnsmasq-regex
