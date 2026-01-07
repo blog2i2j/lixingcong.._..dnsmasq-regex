@@ -1,12 +1,12 @@
 diff --git a/Makefile b/Makefile
-index a503c82..37e92f2 100644
+index a503c82..f28ab37 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -24,7 +24,11 @@ MANDIR        = $(PREFIX)/share/man
  LOCALEDIR     = $(PREFIX)/share/locale
  BUILDDIR      = $(SRC)
  DESTDIR       = 
-+ifndef BUILD_DEBUG
++ifneq ($(BUILD_DEBUG), 1)
  CFLAGS        = -Wall -W -O2
 +else
 +CFLAGS        = -Wall -W -g
@@ -14,34 +14,39 @@ index a503c82..37e92f2 100644
  LDFLAGS       = 
  COPTS         = 
  RPM_OPT_FLAGS = 
-@@ -66,6 +70,8 @@ lua_libs =      `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_LUASCRIPT $(PKG_CON
- nettle_cflags = `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_DNSSEC     $(PKG_CONFIG) --cflags 'nettle hogweed'`
- nettle_libs =   `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_DNSSEC     $(PKG_CONFIG) --libs 'nettle hogweed'`
- gmp_libs =      `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_DNSSEC NO_GMP --copy -lgmp`
-+regex_cflags =  `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_REGEX $(PKG_CONFIG) --cflags libpcre`
-+regex_libs =    `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_REGEX $(PKG_CONFIG) --libs libpcre`
- sunos_libs =    `if uname | grep SunOS >/dev/null 2>&1; then echo -lsocket -lnsl -lposix4; fi`
- nft_cflags =    `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_NFTSET $(PKG_CONFIG) --cflags libnftables` 
+@@ -71,6 +75,13 @@ nft_cflags =    `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_NFTSET $(PKG_CONFIG
  nft_libs =      `echo $(COPTS) | $(top)/bld/pkg-wrapper HAVE_NFTSET $(PKG_CONFIG) --libs libnftables`
-@@ -89,8 +95,8 @@ hdrs = dnsmasq.h config.h dhcp-protocol.h dhcp6-protocol.h \
+ version =       -DVERSION='\"`$(top)/bld/get-version $(top)`\"'
+ 
++have_regex = $(shell if echo $(COPTS) | grep HAVE_REGEX >/dev/null 2>&1; then echo yes; fi)
++ifeq ($(have_regex), yes)
++pcre_libname = $(shell if echo $(COPTS) | grep HAVE_PCRE2 >/dev/null 2>&1; then echo libpcre2-8; else echo libpcre; fi)
++pcre_cflags =  `$(PKG_CONFIG) --cflags $(pcre_libname)`
++pcre_libs =    `$(PKG_CONFIG) --libs $(pcre_libname)`
++endif
++
+ sum?=$(shell echo $(CC) -DDNSMASQ_COMPILE_FLAGS="$(CFLAGS)" -DDNSMASQ_COMPILE_OPTS $(COPTS) -E $(top)/$(SRC)/dnsmasq.h | ( md5sum 2>/dev/null || md5 ) | cut -f 1 -d ' ')
+ sum!=echo $(CC) -DDNSMASQ_COMPILE_FLAGS="$(CFLAGS)" -DDNSMASQ_COMPILE_OPTS $(COPTS) -E $(top)/$(SRC)/dnsmasq.h | ( md5sum 2>/dev/null || md5 ) | cut -f 1 -d ' '
+ copts_conf = .copts_$(sum)
+@@ -89,8 +100,8 @@ hdrs = dnsmasq.h config.h dhcp-protocol.h dhcp6-protocol.h \
  all : $(BUILDDIR)
  	@cd $(BUILDDIR) && $(MAKE) \
   top="$(top)" \
 - build_cflags="$(version) $(dbus_cflags) $(idn2_cflags) $(idn_cflags) $(ct_cflags) $(lua_cflags) $(nettle_cflags) $(nft_cflags)" \
 - build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs)" \
-+ build_cflags="$(version) $(dbus_cflags) $(idn2_cflags) $(idn_cflags) $(ct_cflags) $(lua_cflags) $(nettle_cflags) $(nft_cflags) $(regex_cflags)" \
-+ build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs) $(regex_libs)" \
++ build_cflags="$(version) $(dbus_cflags) $(idn2_cflags) $(idn_cflags) $(ct_cflags) $(lua_cflags) $(nettle_cflags) $(nft_cflags) $(pcre_cflags)" \
++ build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs) $(pcre_libs)" \
   -f $(top)/Makefile dnsmasq 
  
  mostly_clean :
-@@ -112,8 +118,8 @@ all-i18n : $(BUILDDIR)
+@@ -112,8 +123,8 @@ all-i18n : $(BUILDDIR)
  	@cd $(BUILDDIR) && $(MAKE) \
   top="$(top)" \
   i18n=-DLOCALEDIR=\'\"$(LOCALEDIR)\"\' \
 - build_cflags="$(version) $(dbus_cflags) $(idn2_cflags) $(idn_cflags) $(ct_cflags) $(lua_cflags) $(nettle_cflags) $(nft_cflags)" \
 - build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs)"  \
-+ build_cflags="$(version) $(dbus_cflags) $(idn2_cflags) $(idn_cflags) $(ct_cflags) $(lua_cflags) $(nettle_cflags) $(nft_cflags) $(regex_cflags)" \
-+ build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs) $(regex_libs)"  \
++ build_cflags="$(version) $(dbus_cflags) $(idn2_cflags) $(idn_cflags) $(ct_cflags) $(lua_cflags) $(nettle_cflags) $(nft_cflags) $(pcre_cflags)" \
++ build_libs="$(dbus_libs) $(idn2_libs) $(idn_libs) $(ct_libs) $(lua_libs) $(sunos_libs) $(nettle_libs) $(gmp_libs) $(ubus_libs) $(nft_libs) $(pcre_libs)"  \
   -f $(top)/Makefile dnsmasq
  	for f in `cd $(PO); echo *.po`; do \
  		cd $(top) && cd $(BUILDDIR) && $(MAKE) top="$(top)" -f $(top)/Makefile $${f%.po}.mo; \
@@ -69,65 +74,79 @@ index 0994f95..38aaa0b 100644
  "IDN2 "
  #else
 diff --git a/src/dnsmasq.h b/src/dnsmasq.h
-index 254bacd..f3825f7 100644
+index 254bacd..2229abc 100644
 --- a/src/dnsmasq.h
 +++ b/src/dnsmasq.h
-@@ -168,6 +168,10 @@ extern int capget(cap_user_header_t header, cap_user_data_t data);
+@@ -168,6 +168,24 @@ extern int capget(cap_user_header_t header, cap_user_data_t data);
  /* daemon is function in the C library.... */
  #define daemon dnsmasq_daemon
  
 +#ifdef HAVE_REGEX
++#ifdef HAVE_PCRE2
++/* we only need to support ASCII chartable, thus set it to 8 */
++#define PCRE2_CODE_UNIT_WIDTH 8
++#include <pcre2.h>
++#define PCRE_REGEX       pcre2_code
++#define PCRE_REGEX_EXTRA pcre2_match_data
++#define FREE_PCRE_REGEX       pcre2_code_free
++#define FREE_PCRE_REGEX_EXTRA pcre2_match_data_free
++#else
 +#include <pcre.h>
++#define PCRE_REGEX       pcre
++#define PCRE_REGEX_EXTRA pcre_extra
++#define FREE_PCRE_REGEX       free
++#define FREE_PCRE_REGEX_EXTRA pcre_free_study
++#endif
 +#endif
 +
  #define ADDRSTRLEN INET6_ADDRSTRLEN
  
  /* Async event queue */
-@@ -607,6 +611,10 @@ struct randfd_list {
+@@ -607,6 +625,10 @@ struct randfd_list {
  struct server {
    u16 flags, domain_len;
    char *domain;
 +#ifdef HAVE_REGEX
-+  pcre *regex;
-+  pcre_extra *pextra;
++  PCRE_REGEX *regex;
++  PCRE_REGEX_EXTRA *pextra;
 +#endif
    struct server *next;
    int serial, arrayposn;
    int last_server;
-@@ -628,6 +636,10 @@ struct server {
+@@ -628,6 +650,10 @@ struct server {
  struct serv_addr4 {
    u16 flags, domain_len;
    char *domain;
 +#ifdef HAVE_REGEX
-+  pcre *regex;
-+  pcre_extra *pextra;
++  PCRE_REGEX *regex;
++  PCRE_REGEX_EXTRA *pextra;
 +#endif
    struct server *next;
    struct in_addr addr;
  };
-@@ -635,6 +647,10 @@ struct serv_addr4 {
+@@ -635,6 +661,10 @@ struct serv_addr4 {
  struct serv_addr6 {
    u16 flags, domain_len;
    char *domain;
 +#ifdef HAVE_REGEX
-+  pcre *regex;
-+  pcre_extra *pextra;
++  PCRE_REGEX *regex;
++  PCRE_REGEX_EXTRA *pextra;
 +#endif
    struct server *next;
    struct in6_addr addr;
  };
-@@ -642,6 +658,10 @@ struct serv_addr6 {
+@@ -642,6 +672,10 @@ struct serv_addr6 {
  struct serv_local {
    u16 flags, domain_len;
    char *domain;
 +#ifdef HAVE_REGEX
-+  pcre *regex;
-+  pcre_extra *pextra;
++  PCRE_REGEX *regex;
++  PCRE_REGEX_EXTRA *pextra;
 +#endif
    struct server *next;
  };
  
-@@ -1199,6 +1219,9 @@ extern struct daemon {
+@@ -1199,6 +1233,9 @@ extern struct daemon {
    struct rebind_domain *no_rebind;
    int server_has_wildcard;
    int serverarraysz, serverarrayhwm;
@@ -137,21 +156,21 @@ index 254bacd..f3825f7 100644
    struct ipsets *ipsets, *nftsets;
    u32 allowlist_mask;
    struct allowlist *allowlists;
-@@ -1937,6 +1960,12 @@ void dump_packet_icmp(int mask, void *packet, size_t len, union mysockaddr *src,
+@@ -1937,6 +1974,12 @@ void dump_packet_icmp(int mask, void *packet, size_t len, union mysockaddr *src,
  #endif
  
  /* domain-match.c */
 +#ifdef HAVE_REGEX
 +int is_local_regex_answer(const char *domain, int *first, int *last);
 +int find_regex_server(const char* domain, int is_local, int *arraypos);
-+int match_regex(const pcre *regex, const pcre_extra *pextra, const char *str, size_t len);
-+const char *parse_regex_option(const char *arg, pcre **regex, pcre_extra **pextra);
++int match_regex(PCRE_REGEX *regex, PCRE_REGEX_EXTRA *pextra, const char *str, size_t len);
++const char *parse_regex_option(const char *arg, PCRE_REGEX **regex, PCRE_REGEX_EXTRA **pextra);
 +#endif
  void build_server_array(void);
  int lookup_domain(char *qdomain, int flags, int *lowout, int *highout);
  int filter_servers(int seed, int flags, int *lowout, int *highout);
 diff --git a/src/domain-match.c b/src/domain-match.c
-index 935a2d3..3a118c6 100644
+index 935a2d3..97b7061 100644
 --- a/src/domain-match.c
 +++ b/src/domain-match.c
 @@ -27,47 +27,90 @@ void build_server_array(void)
@@ -252,12 +271,11 @@ index 935a2d3..3a118c6 100644
  	serv->last_server = -1;
  	count++;
        }
--  
--  for (serv = daemon->local_domains; serv; serv = serv->next, count++)
--    daemon->serverarray[count] = serv;
 +    }
 +  }
-+  
+   
+-  for (serv = daemon->local_domains; serv; serv = serv->next, count++)
+-    daemon->serverarray[count] = serv;
 +  for (serv = daemon->local_domains; serv; serv = serv->next){
 +#ifdef HAVE_REGEX
 +    if(serv->regex){
@@ -373,7 +391,7 @@ index 935a2d3..3a118c6 100644
    
    /* expand nlow and nhigh to cover all the records with the same domain 
       nlow is the first, nhigh - 1 is the last. nlow=nhigh means no servers,
-@@ -374,6 +486,89 @@ int filter_servers(int seed, int flags, int *lowout, int *highout)
+@@ -374,6 +486,125 @@ int filter_servers(int seed, int flags, int *lowout, int *highout)
    return (nlow != nhigh);
  }
  
@@ -435,27 +453,63 @@ index 935a2d3..3a118c6 100644
 +}
 +
 +// return 0 if failed to match
-+int match_regex(const pcre *regex, const pcre_extra *pextra, const char *str, size_t len)
++int match_regex(PCRE_REGEX *regex, PCRE_REGEX_EXTRA *pextra, const char *str, size_t len)
 +{
-+	int captcount = 0;
-+	int ret = 0;
-+	if (pcre_fullinfo(regex, pextra, PCRE_INFO_CAPTURECOUNT, &captcount) == 0)
-+	{
-+		/* C99 dyn-array, or alloca must be used */
-+		int ovect[(captcount + 1) * 3];
-+		ret = pcre_exec(regex, pextra, str, len, 0, 0, ovect, (captcount + 1) * 3) > 0;
-+	}
-+	return ret;
++#ifdef HAVE_PCRE2
++  return pcre2_match(regex, /* the compiled pattern */
++      (PCRE2_SPTR) str, /* the subject string */
++      len, /* the length of the subject */
++      0, /* start at offset 0 in the subject */
++      0, /* default options */
++      pextra, /* block for storing the result */
++      NULL /* use default match context */
++      ) >= 0;
++#else
++  int captcount = 0;
++  int ret = 0;
++  if (pcre_fullinfo(regex, pextra, PCRE_INFO_CAPTURECOUNT, &captcount) == 0)
++  {
++    /* C99 dyn-array, or alloca must be used */
++    int ovect[(captcount + 1) * 3];
++    ret = pcre_exec(regex, pextra, str, len, 0, 0, ovect, (captcount + 1) * 3) > 0;
++  }
++  return ret;
++#endif
 +}
 +
-+const char *parse_regex_option(const char *arg, pcre **regex, pcre_extra **pextra)
++const char *parse_regex_option(const char *arg, PCRE_REGEX **regex, PCRE_REGEX_EXTRA **pextra)
 +{
++#ifdef HAVE_PCRE2
++  int        errornumber;
++  PCRE2_SIZE erroroffset;
++  static PCRE2_UCHAR errbuffer[512];
++
++  *regex = pcre2_compile((PCRE2_SPTR) arg, /* the pattern */
++    PCRE2_ZERO_TERMINATED, /* indicates pattern is zero-terminated */
++    0, /* default options */
++    &errornumber, /* for error number */
++    &erroroffset, /* for error offset */
++    NULL); /* use default compile context */
++
++  if (NULL == *regex) {
++    pcre2_get_error_message(errornumber, errbuffer, sizeof(errbuffer));
++    return (const char*) errbuffer;
++  }
++
++  *pextra = pcre2_match_data_create_from_pattern(*regex, NULL);
++  if (NULL == *pextra){
++    strcpy((char*)errbuffer, "PCRE2: the memory for the block could not be obtained");
++    return (const char*) errbuffer;
++  }
++#else
 +  const char *error;
 +  int erroff;
 +  *regex = pcre_compile(arg, 0, &error, &erroff, NULL);
 +  if(NULL == *regex)
 +    return error;
 +  *pextra = pcre_study(*regex, 0, &error);
++#endif
++
 +  return NULL;
 +}
 +#endif
@@ -463,7 +517,7 @@ index 935a2d3..3a118c6 100644
  int is_local_answer(time_t now, int first, char *name)
  {
    int flags = 0;
-@@ -529,6 +724,9 @@ static int order(char *qdomain, size_t qlen, struct server *serv)
+@@ -529,6 +760,9 @@ static int order(char *qdomain, size_t qlen, struct server *serv)
  static int order_servers(struct server *s1, struct server *s2)
  {
    int rc;
@@ -473,7 +527,29 @@ index 935a2d3..3a118c6 100644
  
    /* need full comparison of dotless servers in 
       order_qsort() and filter_servers() */
-@@ -652,6 +850,9 @@ int add_update_server(int flags,
+@@ -615,6 +849,10 @@ void mark_servers(int flag)
+ 	  {
+ 	    *up = next;
+ 	    free(serv->domain);
++#ifdef HAVE_REGEX
++      if(serv->regex) { FREE_PCRE_REGEX(serv->regex); serv->regex = NULL; }
++      if(serv->pextra) { FREE_PCRE_REGEX_EXTRA(serv->pextra); serv->pextra = NULL; }
++#endif
+ 	    free(serv);
+ 	  }
+ 	else 
+@@ -635,6 +873,10 @@ void cleanup_servers(void)
+          server_gone(serv);
+          *up = serv->next;
+ 	 free(serv->domain);
++#ifdef HAVE_REGEX
++   if(serv->regex) { FREE_PCRE_REGEX(serv->regex); serv->regex = NULL; }
++   if(serv->pextra) { FREE_PCRE_REGEX_EXTRA(serv->pextra); serv->pextra = NULL; }
++#endif
+ 	 free(serv);
+        }
+       else 
+@@ -652,6 +894,9 @@ int add_update_server(int flags,
  		      const char *domain,
  		      union all_addr *local_addr)
  {
@@ -483,7 +559,7 @@ index 935a2d3..3a118c6 100644
    struct server *serv = NULL;
    char *alloc_domain;
    
-@@ -667,10 +868,32 @@ int add_update_server(int flags,
+@@ -667,10 +912,32 @@ int add_update_server(int flags,
        if (*domain != 0)
  	flags |= SERV_WILDCARD;
      }
@@ -517,7 +593,7 @@ index 935a2d3..3a118c6 100644
      alloc_domain = canonicalise((char *)domain, NULL);
  
    if (!alloc_domain)
-@@ -772,6 +995,16 @@ int add_update_server(int flags,
+@@ -772,6 +1039,16 @@ int add_update_server(int flags,
    serv->flags = flags;
    serv->domain = alloc_domain;
    serv->domain_len = strlen(alloc_domain);

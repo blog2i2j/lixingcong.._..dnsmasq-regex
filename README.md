@@ -2,10 +2,6 @@
 
 Lastest version: v2.92rc3
 
-The regex lib will be upgraded to libpcre2.
-
-> PCRE2 was first released in 2015 to replace the API in the original PCRE library, which is now obsolete and no longer maintained.
-
 patches:
 - [001-regex-server.patch](/patches/001-regex-server.patch)
 - [002-regex-ipset.patch](/patches/002-regex-ipset.patch)
@@ -57,6 +53,15 @@ to
 ```
 DNSMASQ_COPTS="-DHAVE_REGEX"
 ```
+
+*Tips:* If you want to link to libpcre2, add `-DHAVE_PCRE2` to compile options.
+
+```
+DNSMASQ_COPTS="-DHAVE_PCRE2"
+```
+
+> PCRE2 was first released in 2015 to replace the API in the original PCRE library, which is now obsolete and no longer maintained.
+
 
 ## Config file example
 

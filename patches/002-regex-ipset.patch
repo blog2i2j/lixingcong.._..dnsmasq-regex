@@ -25,16 +25,16 @@ index 38aaa0b..b6323dc 100644
  "IDN2 "
  #else
 diff --git a/src/dnsmasq.h b/src/dnsmasq.h
-index f3825f7..5ec62e1 100644
+index 2229abc..bf8d8d9 100644
 --- a/src/dnsmasq.h
 +++ b/src/dnsmasq.h
-@@ -674,6 +674,10 @@ struct ipsets {
+@@ -688,6 +688,10 @@ struct ipsets {
    char **sets;
    char *domain;
    struct ipsets *next;
 +#if defined(HAVE_REGEX) && defined(HAVE_REGEX_IPSET)
-+  pcre *regex;
-+  pcre_extra *pextra;
++  PCRE_REGEX *regex;
++  PCRE_REGEX_EXTRA *pextra;
 +#endif
  };
  
